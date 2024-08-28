@@ -172,7 +172,7 @@ int	render_scene(t_env *e)
                 hit = 1;
         }
         if (side == 0)
-            perpWallDist = (mapX - e->posX + (1 - stepX) / 2) / rayDirX;
+            perpWallDist = (sideDistX - deltaDistX);
         else
             perpWallDist = (sideDistY - deltaDistY);
 
@@ -211,8 +211,8 @@ int	main(void)
     e.win = mlx_new_window(e.mlx, SCREEN_WIDTH, SCREEN_HEIGHT, "Raycaster");
     e.img = mlx_new_image(e.mlx, SCREEN_WIDTH, SCREEN_HEIGHT);
     e.data = (int *)mlx_get_data_addr(e.img, &e.bpp, &e.sizeline, &e.endian);
-    e.posX = 22;
-    e.posY = 12;
+    e.posX = 15;
+    e.posY = 15;
     e.dirX = -1;
     e.dirY = 0;
     e.planeX = 0;
