@@ -8,6 +8,9 @@
 #define SCREEN_HEIGHT 480
 #define MAP_WIDTH 24
 #define MAP_HEIGHT 24
+#define CEILING_COLOR 0x000000  // Light Blue color for the ceiling
+#define FLOOR_COLOR   0x9000FF  // Brown color for the floor
+
 
 int worldMap[MAP_WIDTH][MAP_HEIGHT] =
 {
@@ -36,7 +39,8 @@ int worldMap[MAP_WIDTH][MAP_HEIGHT] =
     {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
 };
 
-typedef struct s_env {
+typedef struct s_env
+{
     void	*mlx;
     void	*win;
     void	*img;
@@ -50,15 +54,19 @@ typedef struct s_env {
     double	dirY;
     double	planeX;
     double	planeY;
+    double  mapHeight;
+    double  mapWidth;
 }	t_env;
 
 int	key_press(int keycode, t_env *e)
 {
-    double	moveSpeed = 0.5;
-    double	rotSpeed = 0.10;
+    double	moveSpeed;
+    double	rotSpeed;
     double	oldDirX;
     double	oldPlaneX;
 
+    moveSpeed = 0.5;
+    rotSpeed = 0.10;
     if (keycode == 126)
     {
         if (worldMap[(int)(e->posX + e->dirX * moveSpeed)][(int)(e->posY)] == 0)
@@ -96,111 +104,178 @@ int	key_press(int keycode, t_env *e)
     return (0);
 }
 
-void	draw_vertical_line(t_env *e, int x, int start, int end, int color)
+void draw_vertical_line(t_env *e, int x, int start, int end, int color)
 {
-    int	i;
+    int i;
 
     i = start;
-    while (i < end)
+    if (start < 0)
+        start = 0;
+    if (end >= SCREEN_HEIGHT)
+        end = SCREEN_HEIGHT - 1;   
+    while (i <= end)
+        e->data[i++ * SCREEN_WIDTH + x] = color;
+}
+
+void draw_minimap(t_env *e)
+{
+    int mapScale = 4; // Échelle de la minimap (une case = 4x4 pixels)
+    int miniMapSize = 100; // Taille de la minimap
+    int mapStartX = SCREEN_WIDTH - miniMapSize - 20; // Position X de la minimap
+    int mapStartY = 20; // Position Y de la minimap
+
+    // Dessiner la minimap
+    for (int y = 0; y < e->mapHeight; y++)
     {
-        e->data[i * SCREEN_WIDTH + x] = color;
-        i++;
+        for (int x = 0; x < e->mapWidth; x++)
+        {
+            int color;
+            if (worldMap[y][x] > 0)
+                color = 0xFFFFFF; // Couleur pour les murs
+            else
+                color = 0x000000; // Couleur pour les espaces vides
+
+            for (int i = 0; i < mapScale; i++)
+            {
+                for (int j = 0; j < mapScale; j++)
+                {
+                    int drawX = mapStartX + x * mapScale + i;
+                    int drawY = mapStartY + y * mapScale + j;
+
+                    if (drawX >= 0 && drawX < SCREEN_WIDTH && drawY >= 0 && drawY < SCREEN_HEIGHT)
+                        e->data[drawY * SCREEN_WIDTH + drawX] = color;
+                }
+            }
+        }
     }
 }
 
-int	render_scene(t_env *e)
+// Calcule la distance jusqu'à la prochaine intersection avec une ligne de la grille
+void calculate_step_and_side_dist(t_env *e, double rayDirX, double rayDirY, int *stepX, int *stepY, double *sideDistX, double *sideDistY, int mapX, int mapY)
 {
-    int		x;
+    if (rayDirX < 0)
+    {
+        *stepX = -1;
+        *sideDistX = (e->posX - mapX) * fabs(1 / rayDirX);
+    }
+    else
+    {
+        *stepX = 1;
+        *sideDistX = (mapX + 1.0 - e->posX) * fabs(1 / rayDirX);
+    }
+    if (rayDirY < 0)
+    {
+        *stepY = -1;
+        *sideDistY = (e->posY - mapY) * fabs(1 / rayDirY);
+    }
+    else
+    {
+        *stepY = 1;
+        *sideDistY = (mapY + 1.0 - e->posY) * fabs(1 / rayDirY);
+    }
+}
 
-    // Clear the image buffer by setting all pixels to black
-    for (int i = 0; i < SCREEN_WIDTH * SCREEN_HEIGHT; i++)
-        e->data[i] = 0x000000;  // Black color
+// Effectue le tracé de la ligne et détermine si elle a touché un mur
+void perform_dda(t_env *e, int *mapX, int *mapY, double *sideDistX, double *sideDistY, double deltaDistX, double deltaDistY, int stepX, int stepY, int *side)
+{
+    int hit = 0;
 
-    x = 0;
+    while (hit == 0)
+    {
+        if (*sideDistX < *sideDistY)
+        {
+            *sideDistX += deltaDistX;
+            *mapX += stepX;
+            *side = 0;
+        }
+        else
+        {
+            *sideDistY += deltaDistY;
+            *mapY += stepY;
+            *side = 1;
+        }
+        if (worldMap[*mapX][*mapY] > 0)
+            hit = 1;
+    }
+}
+
+// Calcule les positions pour dessiner les lignes
+void calculate_line_positions(t_env *e, int *drawStart, int *drawEnd, double perpWallDist, int *lineHeight)
+{
+    *lineHeight = (int)(SCREEN_HEIGHT / perpWallDist);
+    *drawStart = -(*lineHeight) / 2 + SCREEN_HEIGHT / 2;
+    if (*drawStart < 0)
+        *drawStart = 0;
+    *drawEnd = *lineHeight / 2 + SCREEN_HEIGHT / 2;
+    if (*drawEnd >= SCREEN_HEIGHT)
+        *drawEnd = SCREEN_HEIGHT - 1;
+}
+
+// Remplit les parties de l'écran correspondant au plafond et au sol
+void draw_ceiling_and_floor(t_env *e, int x, int drawStart, int drawEnd)
+{
+    for (int y = 0; y < drawStart; y++) {
+        if (y >= 0 && y < SCREEN_HEIGHT)
+            e->data[y * SCREEN_WIDTH + x] = CEILING_COLOR;
+    }
+    for (int y = drawEnd + 1; y < SCREEN_HEIGHT; y++) {
+        if (y >= 0 && y < SCREEN_HEIGHT)
+            e->data[y * SCREEN_WIDTH + x] = FLOOR_COLOR;
+    }
+}
+
+// Détermine la couleur du mur en fonction du numéro de texture
+int get_wall_color(int mapX, int mapY, int side)
+{
+    int color;
+
+    switch (worldMap[mapX][mapY])
+    {
+        case 1: color = 0xFFD5F8; break; // Red
+        case 2: color = 0xFFB7F4; break; // Green
+        case 3: color = 0xFD98ED; break; // Blue
+        case 4: color = 0xFD75E8; break; // White
+        default: color = 0xFC4AE0; break; // Yellow
+    }
+    if (side == 1)
+        color /= 0.2;
+    return (color);
+}
+
+// Fonction principale de rendu
+int render_scene(t_env *e)
+{
+    int x = 0;
+
     while (x < SCREEN_WIDTH)
     {
-        double	cameraX = 2 * x / (double)SCREEN_WIDTH - 1;
-        double	rayDirX = e->dirX + e->planeX * cameraX;
-        double	rayDirY = e->dirY + e->planeY * cameraX;
-        int		mapX = (int)e->posX;
-        int		mapY = (int)e->posY;
-        double	sideDistX;
-        double	sideDistY;
-        double	deltaDistX = (rayDirX == 0) ? 1e30 : fabs(1 / rayDirX);
-        double	deltaDistY = (rayDirY == 0) ? 1e30 : fabs(1 / rayDirY);
-        double	perpWallDist;
-        int		stepX;
-        int		stepY;
-        int		hit = 0;
-        int		side;
+        double cameraX = 2 * x / (double)SCREEN_WIDTH - 1;
+        double rayDirX = e->dirX + e->planeX * cameraX;
+        double rayDirY = e->dirY + e->planeY * cameraX;
+        int mapX = (int)e->posX;
+        int mapY = (int)e->posY;
 
-        if (rayDirX < 0)
-        {
-            stepX = -1;
-            sideDistX = (e->posX - mapX) * deltaDistX;
-        }
-        else
-        {
-            stepX = 1;
-            sideDistX = (mapX + 1.0 - e->posX) * deltaDistX;
-        }
-        if (rayDirY < 0)
-        {
-            stepY = -1;
-            sideDistY = (e->posY - mapY) * deltaDistY;
-        }
-        else
-        {
-            stepY = 1;
-            sideDistY = (mapY + 1.0 - e->posY) * deltaDistY;
-        }
-        while (hit == 0)
-        {
-            if (sideDistX < sideDistY)
-            {
-                sideDistX += deltaDistX;
-                mapX += stepX;
-                side = 0;
-            }
-            else
-            {
-                sideDistY += deltaDistY;
-                mapY += stepY;
-                side = 1;
-            }
-            if (worldMap[mapX][mapY] > 0)
-                hit = 1;
-        }
-        if (side == 0)
-            perpWallDist = (sideDistX - deltaDistX);
-        else
-            perpWallDist = (sideDistY - deltaDistY);
-
-        int lineHeight = (int)(SCREEN_HEIGHT / perpWallDist);
-        int drawStart = -lineHeight / 2 + SCREEN_HEIGHT / 2;
-        if (drawStart < 0)
-            drawStart = 0;
-        int drawEnd = lineHeight / 2 + SCREEN_HEIGHT / 2;
-        if (drawEnd >= SCREEN_HEIGHT)
-            drawEnd = SCREEN_HEIGHT - 1;
-
-        int color;
-        switch (worldMap[mapX][mapY])
-        {
-            case 1: color = 0xFF0000; break; // Red
-            case 2: color = 0x00FF00; break; // Green
-            case 3: color = 0x0000FF; break; // Blue
-            case 4: color = 0xFFFFFF; break; // White
-            default: color = 0xFFFF00; break; // Yellow
-        }
-        if (side == 1)
-            color = color / 2;
+        double sideDistX, sideDistY;
+        double deltaDistX = (rayDirX == 0) ? 1e30 : fabs(1 / rayDirX);
+        double deltaDistY = (rayDirY == 0) ? 1e30 : fabs(1 / rayDirY);
+        int stepX, stepY, side;
+        calculate_step_and_side_dist(e, rayDirX, rayDirY, &stepX, &stepY, &sideDistX, &sideDistY, mapX, mapY);
+        perform_dda(e, &mapX, &mapY, &sideDistX, &sideDistY, deltaDistX, deltaDistY, stepX, stepY, &side);
+        double perpWallDist = (side == 0)
+            ? (mapX - e->posX + (1 - stepX) / 2) / rayDirX
+            : (mapY - e->posY + (1 - stepY) / 2) / rayDirY;
+        int lineHeight, drawStart, drawEnd;
+        calculate_line_positions(e, &drawStart, &drawEnd, perpWallDist, &lineHeight);
+        draw_ceiling_and_floor(e, x, drawStart, drawEnd);
+        int color = get_wall_color(mapX, mapY, side);
         draw_vertical_line(e, x, drawStart, drawEnd, color);
         x++;
     }
+    draw_minimap(e);
     mlx_put_image_to_window(e->mlx, e->win, e->img, 0, 0);
     return (0);
 }
+
 
 
 int	main(void)
@@ -217,8 +292,11 @@ int	main(void)
     e.dirY = 0;
     e.planeX = 0;
     e.planeY = 0.66;
+    e.mapHeight = MAP_HEIGHT;  // Correction ici
+    e.mapWidth = MAP_WIDTH;    // Correction ici
     mlx_loop_hook(e.mlx, &render_scene, &e);
     mlx_hook(e.win, 2, 1L << 0, &key_press, &e);
     mlx_loop(e.mlx);
     return (0);
 }
+
