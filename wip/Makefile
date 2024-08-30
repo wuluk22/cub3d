@@ -24,18 +24,15 @@ SRC     = main.c
 OBJ     = $(SRC:.c=.o)
 CC      = gcc
 CFLAGS  = -g -Wall -Werror -Wextra
-COMP    = $(CC) $(CFLAGS)
-RM      = rm -f
-DIR_INC	= -Iutils/
-LIB_LIB	= utils/libft.a
-MLX_DIR = minilibx_opengl_20191021
-LINK	= -lmlx -framework OpenGL -framework AppKit -L $(MLX_DIR)
-TOT_FIL	= $(words $(SRC))
+DIR_INC = -Iutils/ -I/includes  # Adjust path to MLX headers if necessary
+LIB_LIB = utils/libft.a
+LINK_FLAGS = -lmlx -framework OpenGL -framework AppKit
+TOT_FIL = $(words $(SRC))
 
 all:    $(NAME)
 
-$(NAME): $(OBJ) libmlx $(LIB_LIB)
-		@$(COMP) $(OBJ) -o $(NAME) $(LIB_LIB) -L. -lmlx
+$(NAME): $(OBJ) $(LIB_LIB)
+		@$(CC) $(OBJ) -o $(NAME) $(LIB_LIB) $(LINK_FLAGS)
 		@echo "$(GREEN)Compilation completed.$(STOP)"
 
 %.o: %.c
@@ -43,19 +40,16 @@ $(NAME): $(OBJ) libmlx $(LIB_LIB)
 		@$(eval FILES_DONE := $(shell echo $$(($(FILES_DONE) + 1))))
 		@$(call PRINT_LOADING_BAR,$(FILES_DONE),$(TOT_FIL))
 
-libmlx:
-		@make -C $(MLX_DIR)
-
 $(LIB_LIB):
 		@$(MAKE) -C utils
 
 clean:
 		@$(RM) $(OBJ)
-		@$(MAKE) -C utils $(MLX_DIR) clean
+		@$(MAKE) -C utils clean
 		@echo "$(GREEN)Cleaning completed.$(STOP)"
 
 fclean: clean
 		@$(RM) $(NAME)
-		@$(MAKE) -C utils $(MLX_DIR) fclean
+		@$(MAKE) -C utils fclean
 
 re:     fclean all
