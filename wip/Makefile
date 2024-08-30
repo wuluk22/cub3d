@@ -20,7 +20,10 @@ define PRINT_LOADING_BAR
 endef
 
 NAME    = cub3D
-SRC     = main.c
+SRC     = main.c\
+			keymap.c\
+			raycasting.c\
+			render.c
 OBJ     = $(SRC:.c=.o)
 CC      = gcc
 CFLAGS  = -g -Wall -Werror -Wextra

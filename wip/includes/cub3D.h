@@ -34,6 +34,10 @@
 # define KEY_LEFT 124
 # define KEY_RIGHT 123
 
+
+extern int worldMap[MAP_WIDTH][MAP_HEIGHT];
+
+
 typedef struct s_env
 {
 	void	*mlx;
