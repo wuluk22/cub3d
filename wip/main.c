@@ -38,6 +38,16 @@ int worldMap[MAP_WIDTH][MAP_HEIGHT] = {
     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
 };
 
+void init_keys(t_env *e)
+{
+    e->keys[KEY_W] = 0;
+    e->keys[KEY_A] = 0;
+    e->keys[KEY_S] = 0;
+    e->keys[KEY_D] = 0;
+    e->keys[KEY_LEFT] = 0;
+    e->keys[KEY_RIGHT] = 0;
+}
+
 int main(void)
 {
     t_env e;
@@ -54,9 +64,10 @@ int main(void)
     e.planeY = 0.66;
     e.mapHeight = MAP_HEIGHT;
     e.mapWidth = MAP_WIDTH;
-    mlx_hook(e.win, 2, 1L << 0, &key_press, &e);
-    mlx_hook(e.win, 3, 1L << 1, &key_release, &e);
-    mlx_loop_hook(e.mlx, &render_scene, &e);
+    init_keys(&e);
+    mlx_hook(e.win, 2, 1L << 0, key_press, &e);
+    mlx_hook(e.win, 3, 1L << 1, key_release, &e);
+    mlx_loop_hook(e.mlx, render_scene, &e);
     mlx_loop(e.mlx);
     return (0);
 }

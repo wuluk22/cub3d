@@ -31,8 +31,8 @@
 # define KEY_S 1
 # define KEY_D 2
 # define KEY_ESC 53
-# define KEY_LEFT 124
-# define KEY_RIGHT 123
+# define KEY_LEFT 123
+# define KEY_RIGHT 124
 
 
 extern int worldMap[MAP_WIDTH][MAP_HEIGHT];
