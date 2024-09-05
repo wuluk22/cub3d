@@ -22,11 +22,13 @@ endef
 NAME    = cub3D
 SRC     = main.c\
 			keymap.c\
+			keymap_utils.c\
 			raycasting.c\
-			render.c
+			render.c\
+			render_utils.c
 OBJ     = $(SRC:.c=.o)
 CC      = gcc
-CFLAGS  = -g -Wall -Werror -Wextra
+CFLAGS  = -g -Wall -Werror -Wextra -finline-functions -fvectorize -fslp-vectorize -ffast-math -falign-functions -funroll-loops -fstrict-aliasing -fomit-frame-pointer -flto -Ofast -O1 -O2 -Os -O3 
 DIR_INC = -Iutils/ -I/includes  # Adjust path to MLX headers if necessary
 LIB_LIB = utils/libft.a
 LINK_FLAGS = -lmlx -framework OpenGL -framework AppKit

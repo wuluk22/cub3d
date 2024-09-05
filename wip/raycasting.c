@@ -1,86 +1,92 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   raycasting.c                                       :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: clegros <clegros@student.s19.be>           +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/09/05 12:34:25 by clegros           #+#    #+#             */
+/*   Updated: 2024/09/05 12:34:27 by clegros          ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "includes/cub3D.h"
 
-// Calcule la distance jusqu'à la prochaine intersection avec une ligne de la grille
-void calculate_step_and_side_dist(t_env *e, double rayDirX, double rayDirY, int *stepX, int *stepY, double *sideDistX, double *sideDistY, int mapX, int mapY)
+void	calculate_step_and_side_dist(t_env *e)
 {
-	if (rayDirX < 0)
+	if (e->ray_dir_x < 0)
 	{
-		*stepX = -1;
-		*sideDistX = (e->posX - mapX) * fabs(1 / rayDirX);
+		e->step_x = -1;
+		e->side_dist_x = (e->pos_x - e->map_x) * fabs(1 / e->ray_dir_x);
 	}
 	else
 	{
-		*stepX = 1;
-		*sideDistX = (mapX + 1.0 - e->posX) * fabs(1 / rayDirX);
+		e->step_x = 1;
+		e->side_dist_x = (e->map_x + 1.0 - e->pos_x) * fabs(1 / e->ray_dir_x);
 	}
-	if (rayDirY < 0)
+	if (e->ray_dir_y < 0)
 	{
-		*stepY = -1;
-		*sideDistY = (e->posY - mapY) * fabs(1 / rayDirY);
+		e->step_y = -1;
+		e->side_dist_y = (e->pos_y - e->map_y) * fabs(1 / e->ray_dir_y);
 	}
 	else
 	{
-		*stepY = 1;
-		*sideDistY = (mapY + 1.0 - e->posY) * fabs(1 / rayDirY);
+		e->step_y = 1;
+		e->side_dist_y = (e->map_y + 1.0 - e->pos_y) * fabs(1 / e->ray_dir_y);
 	}
 }
 
-// Effectue le tracé de la ligne et détermine si elle a touché un mur
-void perform_dda(t_env *e, int *mapX, int *mapY, double *sideDistX, double *sideDistY, double deltaDistX, double deltaDistY, int stepX, int stepY, int *side)
+void	perform_dda(t_env *e)
 {
-    int hit;
+	int	hit;
 
-    hit = 0;
-    (void)e;
-    while (hit == 0)
-    {
-        if (*sideDistX < *sideDistY)
-        {
-            *sideDistX += deltaDistX;
-            *mapX += stepX;
-            *side = 0;
-        }
-        else
-        {
-            *sideDistY += deltaDistY;
-            *mapY += stepY;
-            *side = 1;
-        }
-        if (worldMap[*mapX][*mapY] > 0)
-            hit = 1;
-    }
+	hit = 0;
+	while (hit == 0)
+	{
+		if (e->side_dist_x < e->side_dist_y)
+		{
+			e->side_dist_x += e->delta_dist_x;
+			e->map_x += e->step_x;
+			e->side = 0;
+		}
+		else
+		{
+			e->side_dist_y += e->delta_dist_y;
+			e->map_y += e->step_y;
+			e->side = 1;
+		}
+		if (worldMap[e->map_x][e->map_y] > 0)
+			hit = 1;
+	}
 }
 
-// Calcule les positions pour dessiner les lignes
-void calculate_line_positions(t_env *e, int *drawStart, int *drawEnd, double perpWallDist, int *lineHeight)
+void	calculate_line_positions(t_env *e)
 {
-    (void)e;
-    *lineHeight = (int)(SCREEN_HEIGHT / perpWallDist);
-    *drawStart = -(*lineHeight) / 2 + SCREEN_HEIGHT / 2;
-    if (*drawStart < 0)
-        *drawStart = 0;
-    *drawEnd = *lineHeight / 2 + SCREEN_HEIGHT / 2;
-    if (*drawEnd >= SCREEN_HEIGHT)
-        *drawEnd = SCREEN_HEIGHT - 1;
+	e->line_height = (int)(SCREEN_HEIGHT / e->perp_wall_dist);
+	e->draw_start = -e->line_height / 2 + SCREEN_HEIGHT / 2;
+	if (e->draw_start < 0)
+		e->draw_start = 0;
+	e->draw_end = e->line_height / 2 + SCREEN_HEIGHT / 2;
+	if (e->draw_end >= SCREEN_HEIGHT)
+		e->draw_end = SCREEN_HEIGHT - 1;
 }
 
-// Remplit les parties de l'écran correspondant au plafond et au sol
-void draw_ceiling_and_floor(t_env *e, int x, int drawStart, int drawEnd)
+void	draw_ceiling_and_floor(t_env *e, int x)
 {
-    int y;
+	int	y;
 
-    y = 0;
-    while (y < drawStart)
-    {
-        if (y >= 0 && y < SCREEN_HEIGHT)
-            e->data[y * SCREEN_WIDTH + x] = CEILING_COLOR;
-        y++;
-    }
-    y = drawEnd + 1;
-    while (y < SCREEN_HEIGHT)
-    {
-        if (y >= 0 && y < SCREEN_HEIGHT)
-            e->data[y * SCREEN_WIDTH + x] = FLOOR_COLOR;
-        y++;
-    }
+	y = 0;
+	while (y < e->draw_start)
+	{
+		if (y >= 0 && y < SCREEN_HEIGHT)
+			e->data[y * SCREEN_WIDTH + x] = CEILING_COLOR;
+		y++;
+	}
+	y = e->draw_end + 1;
+	while (y < SCREEN_HEIGHT)
+	{
+		if (y >= 0 && y < SCREEN_HEIGHT)
+			e->data[y * SCREEN_WIDTH + x] = FLOOR_COLOR;
+		y++;
+	}
 }
