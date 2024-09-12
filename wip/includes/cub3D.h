@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cub3D.h                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: clegros <clegros@student.s19.be>           +#+  +:+       +#+        */
+/*   By: alion <alion@student.s19.be>               +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/27 10:03:26 by clegros           #+#    #+#             */
-/*   Updated: 2024/08/27 10:03:28 by clegros          ###   ########.fr       */
+/*   Updated: 2024/09/12 15:15:50 by alion            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@
 # include <stdio.h>
 # include <math.h>
 # include <mlx.h>
+#include <stdio.h> // a enlever quand on aura mis ft_printf aml
 
 # define SCREEN_WIDTH 640
 # define SCREEN_HEIGHT 480
@@ -36,8 +37,28 @@
 
 extern int	worldMap[MAP_WIDTH][MAP_HEIGHT];
 
+typedef struct s_map // ajoute par aml
+{
+	char	**map; // = worldmap ? aml
+	char	**map_copy;
+	int		x;
+	int		y;
+	int		player;
+	int		fc;
+	int		cc;
+	int		x_map_size;
+	int		y_map_size;
+//	mlx_image_t		no; // ajout par aml
+//	mlx_image_t		so; // ajout par aml
+//	mlx_image_t		we; // ajout par aml
+//	mlx_image_t		ea; // ajout par aml
+	u_int32_t	floor_color; // ajout par aml
+	u_int32_t	ceiling_color; // ajout par aml
+}	t_map;
+
 typedef struct s_env
 {
+	t_map	*map; // ajout par aml
 	void	*mlx;
 	void	*win;
 	void	*img;
@@ -80,6 +101,13 @@ void	rotate_right(t_env *e, double rotSpeed);
 int	key_press(int keycode, t_env *e);
 int	key_release(int keycode, t_env *e);
 void	move_player(t_env *e);
+//-----------parsing_help.c
+void	ft_exit(t_env *e, char *str, int i);
+void	free_map(char **map, int i);
+//-----------parsing_map.c
+int		get_map(char **argv, t_env *e, t_map *map);
+//-----------parsing.c
+int		parsing(int argc, char **argv, t_map *map, t_env *e);
 //-----------raycasting.c
 void	calculate_step_and_side_dist(t_env *e);
 void	perform_dda(t_env *e);

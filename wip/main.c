@@ -3,15 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: clegros <clegros@student.s19.be>           +#+  +:+       +#+        */
+/*   By: alion <alion@student.s19.be>               +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/27 10:03:44 by clegros           #+#    #+#             */
-/*   Updated: 2024/08/27 10:04:27 by clegros          ###   ########.fr       */
+/*   Updated: 2024/09/12 15:27:30 by alion            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "includes/cub3D.h"
 
+/*
 int	worldMap[MAP_WIDTH][MAP_HEIGHT] = {
 	{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
 	{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
@@ -37,6 +38,7 @@ int	worldMap[MAP_WIDTH][MAP_HEIGHT] = {
 	{1, 4, 4, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
 	{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
 };
+*/
 
 static void	init_keys(t_env *e)
 {
@@ -48,11 +50,18 @@ static void	init_keys(t_env *e)
 	e->keys[KEY_RIGHT] = 0;
 }
 
-int	main(void)
+int	main(int argc, char **argv)
 {
 	t_env	e;
+	t_map	map;
 
 	e.mlx = mlx_init();
+	if (!e.mlx)
+		ft_exit(&e, "Problem with data.mlx", 0);
+	parsing(argc, argv, &map, &e);
+	map.map = ft_calloc((1000), sizeof(char *)); // a modifier pour la bonne taille aml
+	if (!map.map)
+		ft_exit(&e, "Problem with map.map", 0);
 	e.win = mlx_new_window(e.mlx, SCREEN_WIDTH, SCREEN_HEIGHT, "Raycaster");
 	e.img = mlx_new_image(e.mlx, SCREEN_WIDTH, SCREEN_HEIGHT);
 	e.data = (int *)mlx_get_data_addr(e.img, &e.bpp, &e.sizeline, &e.endian);
@@ -67,7 +76,7 @@ int	main(void)
 	init_keys(&e);
 	mlx_hook(e.win, 2, 1L << 0, key_press, &e);
 	mlx_hook(e.win, 3, 1L << 1, key_release, &e);
-	mlx_loop_hook(e.mlx, render_scene, &e);
-	mlx_loop(e.mlx);
+//	mlx_loop_hook(e.mlx, render_scene, &e);
+//	mlx_loop(e.mlx);
 	return (0);
 }

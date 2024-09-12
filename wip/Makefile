@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: clegros <clegros@student.s19.be>           +#+  +:+       +#+         #
+#    By: alion <alion@student.s19.be>               +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/08/27 10:03:35 by clegros           #+#    #+#              #
-#    Updated: 2024/08/27 10:03:37 by clegros          ###   ########.fr        #
+#    Updated: 2024/09/12 15:05:02 by alion            ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -23,6 +23,9 @@ NAME    = cub3D
 SRC     = main.c\
 			keymap.c\
 			keymap_utils.c\
+			parsing_help.c\
+			parsing_map.c\
+			parsing.c\
 			raycasting.c\
 			render.c\
 			render_utils.c
