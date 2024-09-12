@@ -28,7 +28,9 @@ SRC     = main.c\
 			parsing.c\
 			raycasting.c\
 			render.c\
-			render_utils.c
+			render_utils.c\
+			utils/get_next_line/ft_get_next_line.c\
+			utils/get_next_line/ft_get_next_line_utils.c
 OBJ     = $(SRC:.c=.o)
 CC      = gcc
 CFLAGS  = -g -Wall -Werror -Wextra -finline-functions -fvectorize -fslp-vectorize -ffast-math -falign-functions -funroll-loops -fstrict-aliasing -fomit-frame-pointer -flto -Ofast -O1 -O2 -Os -O3 
